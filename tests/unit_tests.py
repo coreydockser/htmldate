@@ -113,7 +113,12 @@ MOCK_PAGES = {
 }
 
 MEDIACLOUD_PAGES = {
-    'pagename' : 'thing.html'
+    'https://en.wikipedia.org/wiki/Among_Us' : 'wikipedia_test.html',
+    'https://www.nytimes.com/2017/10/13/opinion/catalonia-spain-puigdemont.html' : 'spain_catalonia.html',
+    'https://en.wikipedia.org/wiki/January_1969' : 'wikipedia_1969.html',
+    'https://en.wikipedia.org/wiki/F-scale_(personality_test)' : 'wikipedia_test_f.html',
+    'https://en.wikipedia.org/wiki/2021_United_States_Capitol_attack' : 'wikipedia_test_jan6.html'
+    
 }
 # '': '', \
 
@@ -191,6 +196,7 @@ def test_no_date():
     assert find_date(load_mock_page('https://en.support.wordpress.com/')) is None
     assert find_date('<html><body>XYZ</body></html>', outputformat='123') is None
     assert find_date('<html><body>XYZ</body></html>', url='http://www.website.com/9999/01/43/') is None
+    
 
 
 def test_exact_date():
@@ -757,6 +763,31 @@ def test_dependencies():
         assert find_date(load_mock_page('https://la-bas.org/la-bas-magazine/chroniques/Didier-Porte-souhaite-la-Sante-a-Balkany')) == '2019-06-28'
         assert find_date(load_mock_page('https://www.revolutionpermanente.fr/Antonin-Bernanos-en-prison-depuis-pres-de-deux-mois-en-raison-de-son-militantisme')) == '2019-06-13'
 
+def test_more_useful_data():
+    '''Test an instance where the date of an image is before the date of the article. It should return the date of the article, not the image.'''
+    assert(find_date('''
+        <html><head>
+        <meta property="og:image" content="foo.com/2016/10/14/whatever.jpg"/>
+         </head></html>
+        ''', url = 'https://www.nytimes.com/2017/10/13/opinion/catalonia-spain-puigdemont.html')) == '2017-10-13'
+        
+
+def test_less_useful_data():
+    ''''Test when main url is before the image'''
+    #image is from 10/14
+    assert find_date(load_mediacloud_page('https://www.nytimes.com/2017/10/13/opinion/catalonia-spain-puigdemont.html')) == '2017-10-13'
+
+
+def test_wikipedia():
+    '''wikipedia articles should not return a date'''
+    assert find_date(load_mediacloud_page('https://en.wikipedia.org/wiki/Among_Us')) is None
+    #assert find_date(load_mediacloud_page('https://en.wikipedia.org/wiki/January_1969')) is None
+    #print(find_date(load_mediacloud_page('https://en.wikipedia.org/wiki/F-scale_(personality_test)')))
+    #assert find_date(load_mediacloud_page('https://en.wikipedia.org/wiki/F-scale_(personality_test)')) is None
+    print(find_date(load_mediacloud_page('https://en.wikipedia.org/wiki/2021_United_States_Capitol_attack')))
+    #assert find_date(load_mediacloud_page('https://en.wikipedia.org/wiki/2021_United_States_Capitol_attack')) is None
+
+
 
 
 if __name__ == '__main__':
@@ -785,6 +816,8 @@ if __name__ == '__main__':
     test_url()
     test_approximate_url()
     test_idiosyncrasies()
+    test_more_useful_data()
+    test_wikipedia()
     # new_pages()
 
     # dependencies
